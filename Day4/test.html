@@ -1,0 +1,252 @@
+﻿
+
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <title>행사한대! 궁금한양?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta http-equiv="Content-Type" content="text/html; utf-8">
+
+    <meta name="description" content="">
+    <meta name="author" content="kimtree">
+    <!-- Bootstrap -->
+    <link href="./bootstrap.min.css" rel="stylesheet" media="screen">
+	<style type="text/css">
+	  /* Default */
+	  .container {
+	    padding-left:15px;
+	    padding-right:15px;
+		padding-bottom:15px;
+	  }
+	  /* Base styles (regardless of theme) */
+      .bs-callout {
+        margin: 20px 0;
+        padding: 20px;
+        border: 1px solid #eee;
+		border-left-width: 5px;
+		border-radius: 3px;
+      }
+      .bs-callout h4 {
+        margin-top: 0;
+		margin-bottom:5px;
+      }
+      .bs-callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Themes for different contexts */
+      .bs-callout-danger {
+        border-left-color: #dFb5b4;
+      }
+      .bs-callout-warning {
+        border-left-color: #f1e7bc;
+      }
+      .bs-callout-info {
+        border-left-color: #1d2475;
+      }
+	  .bs-callout-info h4 {
+		color: #1d2475;
+	  }
+
+	  .banner_title {
+	  	width: 100px;
+	  }
+	  td h4 {
+		color: #357ebd;
+	  }
+    </style>
+	<!-- Scripts -->
+	<script src="./jquery-1.11.1.min.js"></script>
+	<script>
+		$(document).ready(function(){ 
+
+			var apiKey = "AIzaSyAP7UP6e_cYk94WY-1LaiUJfpXmDXRvclo";
+			var calendarUrl = "https://www.googleapis.com/calendar/v3/calendars/eventhanyang%40gmail.com";
+
+			// API default parameters
+			var data = {"key": apiKey};
+			var today = new Date();
+			var oneMonthLater = new Date(today.getFullYear(), today.getMonth()+1, today.getDate());
+
+			data["timeMin"] = today.toISOString();
+			data["timeMax"] = oneMonthLater.toISOString();
+			data["singleEvents"] = true;
+			data["orderBy"] = "startTime";
+
+			$.getJSON(calendarUrl + "/events", data, function(result) {
+				$(".bs-callout h4").text( result["summary"] );
+
+				var updatedISOFormat = result["updated"];
+				$(".bs-callout p").text( "\"캠퍼스 문화감성 충전! 놓치지 마세요~\"" );
+				var p = $("<p>").text( "조회기간 : 오늘 ~ " + convertISOformatToHumanize( data["timeMax"] ) + " (1개월)" );
+				$(".bs-callout").append( p );
+
+				var items = result["items"];
+
+				for (var i=0; i < items.length; i++ ) {
+					var startDate = items[i]["start"]["date"];
+					var endDate = items[i]["end"]["date"];
+
+					var startDateTime = items[i]["start"]["dateTime"];
+					var endDateTime = items[i]["end"]["dateTime"];
+
+					var tr = $("<tr></tr>").addClass("active");
+					var td = $("<td></td>");
+
+					var period = "";
+					if (startDate) {
+						period += convertDateformatToHumanize(startDate);
+						if (endDate) {
+							period += " ~ " + convertDateformatToHumanize(endDate);
+						}
+					} else if (startDateTime) {
+						period += convertISOformatToHumanize( startDateTime );
+
+						if( endDateTime ) {
+							if (isSameTwoISOformatDates(startDateTime, endDateTime)) {
+								period += " ~ " + convertISOformatToTime( endDateTime );
+							} else {
+								period += convertISOformatToHumanize( endDateTime);
+							}
+						}
+					}
+					var strong = $("<strong>");
+					strong.text(period);
+					td.append(strong);
+
+					var h4 = $("<h4></h4>").text( items[i]["summary"] );
+					var small = $("<small>").text( items[i]["location"] );
+					td.append(h4);
+					td.append(small);
+					tr.append(td);
+					$("table").append(tr);
+
+					var tr = $("<tr></tr>");
+					var td = $("<td></td>");
+
+					var p = $("<p>");
+					p.text( items[i]["description"] ); 
+					td.append(p);
+				
+					var link = $("<a>").attr("href", items[i]["htmlLink"]).text(">> 이 행사 캘린더에 등록하기");
+
+					td.append(link);
+					tr.append(td);
+					$("table").append(tr);
+				}
+
+				$("#bottom_buttons").show();
+			});
+		});
+
+		function convertDateformatToHumanize( dateString ) {
+			var resultStr = "";
+
+			var isoDate = new Date(dateString);
+
+			//resultStr += isoDate.getFullYear() + "년 ";
+			resultStr += ( isoDate.getMonth() + 1 ) + "월 ";
+			resultStr += isoDate.getDate() + "일 ";
+
+			return resultStr;
+		}
+
+		function convertISOformatToHumanize( isoFormatString ) {
+			var resultStr = "";
+
+			var isoDate = new Date(isoFormatString);
+
+			//resultStr += isoDate.getFullYear() + "년 ";
+			resultStr += ( isoDate.getMonth() + 1 ) + "월 ";
+			resultStr += isoDate.getDate() + "일 ";
+
+			resultStr += convertISOformatToTime( isoFormatString );
+
+			return resultStr;
+		}
+
+		function convertISOformatToTime( isoFormatString ) {
+			var resultStr = "";
+
+			var isoDate = new Date(isoFormatString);
+
+			if (isoDate.getHours() && isoDate.getHours() != 0 ) {
+				resultStr += isoDate.getHours() + "시 ";
+			}
+
+			if (isoDate.getMinutes() && isoDate.getMinutes() != 0 ) {
+				resultStr += isoDate.getMinutes() + "분";
+			}
+
+			return resultStr;
+		}
+
+		function isSameTwoISOformatDates( a, b ) {
+
+			var isSame = true;
+			var isoDateA = new Date(a);
+			var isoDateB = new Date(b);
+
+			if ( isoDateA.getFullYear() != isoDateB.getFullYear() ) {
+				isSame = false;
+			}
+
+			if ( isoDateA.getMonth() != isoDateB.getMonth() ) {
+				isSame = false;
+			}
+
+			if ( isoDateA.getDate() != isoDateB.getDate() ) {
+				isSame = false;
+			}
+
+			return isSame;
+		}
+	</script>
+  </head>
+  <body>
+  	<div class="container" style="margin-top: 25px">
+ 	<center><img src="./title.jpg" style="width:100%;"></center>
+	</div>
+	<div class="container">
+		<center><div  style="margin: 960 auto;">
+	
+			<a href="http://me2.do/GzCSUIa5" target="_blank" class="btn btn-small btn-danger" style="margin-top:15px; margin-right:5%; width:40%">&nbsp;&nbsp;&nbsp;&nbsp;행사 제보&nbsp;&nbsp;&nbsp;&nbsp;</a>
+			<a href="https://www.facebook.com/eventhanyang" target="_blank" class="btn btn-small btn-primary" style="margin-top:15px; width:40%">&nbsp;공식 페이스북&nbsp;</a>
+			
+		</div></center>
+		<!-- <center><div  style="margin: 960 auto;">
+			<a href="https://www.google.com/calendar/render?cid=eventhanyang@gmail.com" target="_blank" class="btn btn-small btn-warning" style="margin-top:15px; width:40%">구글 캘린더 구독</a>
+			<a href="https://www.facebook.com/eventhanyang" target="_blank" class="btn btn-small btn-danger" style="margin-top:15px; width:40%">&nbsp;공식 페이스북&nbsp;</a>
+			
+		</div></center>
+		<center><div style="margin: 960 auto;">
+			<a href="http://me2.do/GzCSUIa5" target="_blank" class="btn btn-small btn-primary" style="margin-top:15px; width:40%">&nbsp;&nbsp;&nbsp;&nbsp;행사 제보&nbsp;&nbsp;&nbsp;&nbsp;</a>
+			<a href="http://goo.gl/b9oyKF" target="_blank" class="btn btn-small btn-success" style="margin-top:15px; width:40%">&nbsp;&nbsp;달력으로 보기&nbsp;&nbsp;</a>
+		</div></center>
+ -->
+		<div class="bs-callout bs-callout-info">
+		  <h4>달력 정보를 가져오는 중입니다.</h4>
+		  <p></p>
+		</div>
+		<table class="table"></table>
+
+		<div class="container">
+		<!-- <center><div  style="margin: 960 auto;">
+	
+			<a href="http://me2.do/GzCSUIa5" target="_blank" class="btn btn-small btn-danger" style="margin-top:15px; margin-right:5%; width:40%">&nbsp;&nbsp;&nbsp;&nbsp;행사 제보&nbsp;&nbsp;&nbsp;&nbsp;</a>
+			<a href="https://www.facebook.com/eventhanyang" target="_blank" class="btn btn-small btn-primary" style="margin-top:15px; width:40%">&nbsp;공식 페이스북&nbsp;</a>
+			
+		</div></center> -->
+	<!-- 	<center><div style="margin: 960 auto;">
+			
+			<a href="http://goo.gl/b9oyKF" target="_blank" class="btn btn-small btn-success" style="margin-top:15px; width:40%">&nbsp;&nbsp;달력으로 보기&nbsp;&nbsp;</a>
+		</div></center> -->
+	</div>
+	<div class="container">
+		<center><h6>Copyright 2014. HYU with Hanyang Brand Supporters all rights reserved.</h6></center>
+		<center><h6></h6></center>
+	</div>
+  </body>
+</html>

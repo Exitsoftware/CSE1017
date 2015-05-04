@@ -1,0 +1,8 @@
+helo,dbsghks0,2,0.0,32
+doh,sid73,996,551.0,34
+dh,dbsghks,5,1.0,-3
+didi,edd484,130,55.0,10
+na,dbsghks,9,2.0,-5
+dr,qwert,18,8.0,0
+who,poiuy,34,18.0,0
+hy,er878re,35,18.0,2
